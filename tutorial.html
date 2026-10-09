@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A visual, kid-friendly guide to the Build It Live tangible voxel system and web app." />
+    <title>Build It Live / Tutorial</title>
+    <link rel="stylesheet" href="./src/style.css" />
+    <link rel="stylesheet" href="./src/tutorial.css" />
+  </head>
+  <body class="tutorial-body">
+    <div class="tutorial-page" id="top">
+      <header class="tutorial-topbar">
+        <div class="brand tutorial-brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div class="brand-copy">
+            <div class="eyebrow">BUILD IT LIVE / HOW IT WORKS</div>
+            <h1>LEARN BY <i>BUILDING</i></h1>
+            <p class="brand-subtitle">A simple guide from your first block to a 3D file.</p>
+          </div>
+        </div>
+        <nav class="tutorial-nav" aria-label="Build It Live pages">
+          <a class="mode-link mode-link--light" href="./index.html">← BUILD IT LIVE</a>
+          <a class="mode-link mode-link--light" href="./brickmaker.html">BRICK MAKER</a>
+          <span class="mode-link">TUTORIAL</span>
+        </nav>
+      </header>
+
+      <main class="tutorial-main">
+        <section class="tutorial-hero" aria-labelledby="tutorialHeroTitle">
+          <div class="tutorial-hero__copy glass-card">
+            <span class="panel-label">00 / THE BIG IDEA</span>
+            <h2 id="tutorialHeroTitle">BUILD WITH BLOCKS.<br><i>WATCH IT APPEAR.</i></h2>
+            <p class="tutorial-lead">Build on the real board, and Build It Live shows the same shape on the screen.</p>
+            <p>A tiny computer under the board notices where your blocks are. It sends that information to the web app, which makes a matching 3D version. That matching screen version is called a <strong>digital twin</strong>.</p>
+            <div class="hero-actions">
+              <a class="tutorial-primary" href="#walkthrough">START THE GUIDE ↓</a>
+              <a class="tutorial-secondary" href="./index.html">TRY THE BUILDER ↗</a>
+            </div>
+          </div>
+
+          <div class="concept-map glass-card" aria-label="How the real block board connects to the web app and a 3D file">
+            <div class="concept-node concept-node--physical">
+              <span>01</span>
+              <strong>REAL BOARD</strong>
+              <small>You place the cubes.</small>
+              <div class="voxel-stack" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+            <div class="concept-link concept-link--a"><b>BOARD DATA</b><i>→</i></div>
+            <div class="concept-node concept-node--bridge">
+              <span>02</span>
+              <strong>TINY COMPUTER</strong>
+              <small>It notices where the cubes are.</small>
+              <div class="chip-icon" aria-hidden="true">↯</div>
+            </div>
+            <div class="concept-link concept-link--b"><b>SENDS IT</b><i>→</i></div>
+            <div class="concept-node concept-node--digital">
+              <span>03</span>
+              <strong>WEB APP</strong>
+              <small>You see the same build in 3D.</small>
+              <div class="screen-icon" aria-hidden="true"><i></i></div>
+            </div>
+            <div class="concept-link concept-link--c"><b>EXPORT</b><i>→</i></div>
+            <div class="concept-node concept-node--output">
+              <span>04</span>
+              <strong>3D FILE</strong>
+              <small>Save it or get it ready to print.</small>
+              <div class="print-icon" aria-hidden="true">⌁</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="walkthrough" class="walkthrough">
+          <div class="walkthrough-head">
+            <div>
+              <span class="panel-label">01–07 / STEP BY STEP</span>
+              <h2>FROM <i>FIRST BLOCK</i> TO <i>3D FILE</i></h2>
+            </div>
+            <div class="walkthrough-progress" aria-label="Tutorial progress">
+              <span id="tutorialProgressLabel">STEP 01 / 07</span>
+              <div class="walkthrough-progress__track"><i id="tutorialProgressBar"></i></div>
+            </div>
+          </div>
+
+          <div class="tutorial-stage glass-card">
+            <nav class="step-rail" aria-label="Tutorial steps">
+              <button class="step-tab is-active" data-step="0" type="button"><span>01</span><strong>THE GRID</strong></button>
+              <button class="step-tab" data-step="1" type="button"><span>02</span><strong>YOUR TOOLS</strong></button>
+              <button class="step-tab" data-step="2" type="button"><span>03</span><strong>BUILD</strong></button>
+              <button class="step-tab" data-step="3" type="button"><span>04</span><strong>LIVE DATA</strong></button>
+              <button class="step-tab" data-step="4" type="button"><span>05</span><strong>LOOK INSIDE</strong></button>
+              <button class="step-tab" data-step="5" type="button"><span>06</span><strong>SAVE</strong></button>
+              <button class="step-tab" data-step="6" type="button"><span>07</span><strong>EXPORT</strong></button>
+            </nav>
+
+            <article class="step-content" id="stepContent" aria-live="polite"></article>
+
+            <div class="step-controls">
+              <button id="prevStep" class="tutorial-secondary" type="button" disabled>← PREVIOUS</button>
+              <span id="stepCounter">01 / 07</span>
+              <button id="nextStep" class="tutorial-primary" type="button">NEXT STEP →</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="system-overview">
+          <div class="overview-title">
+            <span class="panel-label">08 / WHERE THINGS LIVE</span>
+            <h2>MEET THE <i>4 MAIN AREAS</i></h2>
+            <p>You do not need to remember every button. Start by knowing what each big area is for.</p>
+          </div>
+
+          <div class="interface-map glass-card">
+            <div class="mock-app" aria-hidden="true">
+              <div class="mock-app__brand"><b>BUILD IT LIVE</b><small>YOUR 3D WORKSPACE</small></div>
+              <div class="mock-panel mock-panel--build"><span>01</span><b>BUILD KIT</b><small>Choose blocks and files</small></div>
+              <div class="mock-panel mock-panel--data"><span>02</span><b>LIVE DATA</b><small>See your numbers</small></div>
+              <div class="mock-panel mock-panel--feedback"><span>03</span><b>FEEDBACK</b><small>See what happened</small></div>
+              <div class="mock-panel mock-panel--control"><span>04</span><b>CONTROL DECK</b><small>Change how you work</small></div>
+              <div class="mock-grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+            <div class="interface-notes">
+              <div><span>01</span><p><strong>Build Kit</strong> is your toolbox. Choose what kind of block to add, erase blocks, and open or save projects.</p></div>
+              <div><span>02</span><p><strong>Live Data</strong> is your scoreboard. It shows the grid size, the model height, and how many blocks you used.</p></div>
+              <div><span>03</span><p><strong>Feedback</strong> is the app talking to you. Look here when something works, fails, or needs your attention.</p></div>
+              <div><span>04</span><p><strong>Control Deck</strong> changes how you build and look at the model, including Smooth view, Continuous Build, Autosave, and Layer View.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="two-tools">
+          <article class="tool-story glass-card tool-story--dark">
+            <span class="panel-label">09 / BUILD IT LIVE</span>
+            <h2>BUILD WITH <i>MANY CUBES</i></h2>
+            <p>Use Build It Live when your idea is made by stacking lots of small blocks. You can build, look around, check layers, save the project, and export the final shape.</p>
+            <div class="tool-facts"><span>STACK BLOCKS</span><span>CHECK LAYERS</span><span>SAVE + EXPORT</span></div>
+            <a href="./index.html">OPEN BUILD IT LIVE →</a>
+          </article>
+
+          <article class="tool-story glass-card tool-story--accent">
+            <span class="panel-label">10 / BRICK MAKER</span>
+            <h2>DRAW <i>ONE SPECIAL BRICK</i></h2>
+            <p>Use Brick Maker when you want to design one custom brick shape. Draw the shape from above, check the 3D preview, then make a file for printing.</p>
+            <div class="brick-mini" aria-hidden="true">
+              <div class="brick-mini__grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="brick-mini__arrow">→</div>
+              <div class="brick-mini__shape"><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+            <a href="./brickmaker.html">OPEN BRICK MAKER →</a>
+          </article>
+        </section>
+
+        <section class="quick-reference glass-card">
+          <div class="quick-reference__title">
+            <span class="panel-label">11 / QUICK HELP</span>
+            <h2>USEFUL <i>SHORTCUTS</i></h2>
+            <p>You can click the controls in the app. These keys are just faster when you already know what you want.</p>
+          </div>
+          <div class="shortcut-grid">
+            <div><kbd>1</kbd><span><b>STANDARD</b><small>Add a normal block</small></span></div>
+            <div><kbd>2</kbd><span><b>SUPPORT</b><small>Add a helper block</small></span></div>
+            <div><kbd>E</kbd><span><b>ERASER</b><small>Remove a block</small></span></div>
+            <div><kbd>M</kbd><span><b>FREE MOVE</b><small>Look around only</small></span></div>
+            <div><kbd>ALT + DRAG</kbd><span><b>ORBIT</b><small>Look around while fast-building</small></span></div>
+            <div><kbd>CTRL/CMD + Z</kbd><span><b>UNDO</b><small>Go back one change</small></span></div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="tutorial-footer">
+        <span>BUILD IT LIVE / DIGITAL MAKING</span>
+        <p>REAL BLOCKS → SCREEN COPY → SAVE OR PRINT</p>
+        <a href="#top">BACK TO TOP ↑</a>
+      </footer>
+    </div>
+    <script type="module" src="./src/tutorial.js"></script>
+  </body>
+</html>

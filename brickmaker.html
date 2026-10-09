@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Arrange the physical base brick, preview it live in 3D, and export printable STL geometry." />
+    <title>Build It Live / Brick Maker</title>
+    <link rel="stylesheet" href="./src/style.css" />
+    <link rel="stylesheet" href="./src/brickmaker.css" />
+  </head>
+  <body class="brickmaker-body">
+    <div class="brick-page">
+      <header class="brick-topbar">
+        <div class="brand brick-brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div class="brand-copy">
+            <div class="eyebrow">DIGITAL MAKING / SHAPE-TO-BRICK TOOL</div>
+            <h1>BRICK <span class="brand-title-accent">MAKER</span></h1>
+            <p class="brand-subtitle">Draw a brick layout, inspect the physical base shape live in 3D, then export the printable model.</p>
+          </div>
+        </div>
+        <nav class="brick-nav" aria-label="Builder pages">
+          <a class="mode-link mode-link--light" href="./index.html">← BUILD IT LIVE</a>
+          <a class="mode-link mode-link--light" href="./tutorial.html">HOW IT WORKS</a>
+          <span class="mode-link">BRICK MAKER</span>
+        </nav>
+      </header>
+
+      <main class="brick-main">
+        <section class="brick-panel brick-workspace" aria-labelledby="brickCanvasTitle">
+          <div class="brick-section-head">
+            <div>
+              <span class="panel-label">01 / DRAW FOOTPRINT</span>
+              <h2 id="brickCanvasTitle">DRAW THE BRICK</h2>
+            </div>
+            <div class="brick-tools" role="group" aria-label="Drawing tools">
+              <button class="brick-tool is-active" data-brick-tool="draw" type="button">DRAW</button>
+              <button class="brick-tool" data-brick-tool="erase" type="button">ERASE</button>
+              <button id="brickClear" class="brick-tool brick-tool--clear" type="button">CLEAR</button>
+            </div>
+          </div>
+
+          <div class="brick-grid-frame">
+            <div id="brickGrid" class="brick-grid" role="grid" aria-label="16 by 16 brick layout grid"></div>
+          </div>
+          <p class="brick-hint">CLICK + DRAG · <b>D</b> DRAW · <b>E</b> ERASE · <b>C</b> CLEAR</p>
+        </section>
+
+        <section class="brick-panel brick-preview-panel" aria-labelledby="brickPreviewTitle">
+          <div class="brick-section-head brick-section-head--preview">
+            <div>
+              <span class="panel-label">02 / LIVE 3D</span>
+              <h2 id="brickPreviewTitle">BRICK PREVIEW</h2>
+            </div>
+            <button id="brickPreviewFit" class="brick-tool" type="button">FIT VIEW</button>
+          </div>
+          <div id="brickPreview" class="brick-preview" role="img" aria-label="Interactive live 3D preview of the custom brick"></div>
+          <p class="brick-hint">DRAG TO ORBIT 360° · VIEW UNDERSIDE · SCROLL TO ZOOM</p>
+        </section>
+
+        <aside class="brick-panel brick-summary" aria-label="Brick summary">
+          <span class="panel-label">03 / LIVE OUTPUT</span>
+          <div class="brick-stats-grid">
+            <div class="stat-card stat-card--dark brick-stat">
+              <span>STUDS</span>
+              <strong id="studCount">000</strong>
+            </div>
+            <div class="stat-card stat-card--light brick-stat">
+              <span>FOOTPRINT</span>
+              <strong id="brickFootprint">00×00</strong>
+            </div>
+          </div>
+          <div class="brick-specs">
+            <div><span>LIVE SIZE</span><b id="brickDimensions">0 × 0 × 0 mm</b></div>
+            <div><span>BASE BRICK</span><b id="brickModuleSpec">—</b></div>
+            <div><span>PITCH</span><b id="brickPitchSpec">—</b></div>
+            <div><span>SOURCE STL</span><b id="brickSourceSpec">buildingBlock(2).stl</b></div>
+          </div>
+
+          <div class="brick-output-actions">
+            <button id="brickDownload" class="brick-primary" type="button" disabled>SAVE 3D FILE</button>
+          </div>
+        </aside>
+      </main>
+      <p id="brickStatus" class="brick-status-sr" aria-live="polite">Draw at least one base brick to generate a printable layout.</p>
+    </div>
+    <script type="module" src="./src/brickmaker.js"></script>
+  </body>
+</html>

@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Adjustable 4x4–16x16 physical voxel builder simulator with export smoothing."
+    />
+    <title>Build It Live</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand" aria-label="Build It Live voxel builder">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div class="brand-copy">
+            <div class="eyebrow">DIGITAL MAKING / 3D TANGIBLE SIMULATOR</div>
+            <h1>BUILD <span class="brand-title-accent">IT</span> LIVE</h1>
+            <p class="brand-subtitle">A playful digital twin for testing physical voxel building on an adjustable 4×4–16×16 grid.</p>
+          </div>
+        </div>
+
+        <div class="topbar-meta">
+          <a class="mode-link" href="./tutorial.html">HOW IT WORKS</a>
+          <a class="mode-link" href="./brickmaker.html">BRICK MAKER ↗</a>
+          <div class="top-history" aria-label="Undo and redo">
+            <button id="undoBuild" class="top-history__button" type="button" disabled aria-label="Undo" title="Undo (Ctrl/Cmd + Z)">↶</button>
+            <button id="redoBuild" class="top-history__button" type="button" disabled aria-label="Redo" title="Redo (Ctrl/Cmd + Shift + Z)">↷</button>
+          </div>
+          <div class="top-serial" aria-label="ESP32 Web Serial connection">
+            <div class="top-serial__identity">
+              <span class="top-serial__label">ESP32</span>
+              <span id="serialStatus" class="serial-state"><i></i> OFFLINE</span>
+            </div>
+            <select id="serialBaud" class="top-serial__baud serial-baud" aria-label="Serial baud rate">
+              <option value="9600">9600</option>
+              <option value="57600">57600</option>
+              <option value="115200" selected>115200</option>
+            </select>
+            <button id="connectSerial" class="top-serial__button feature-button feature-button--connect" type="button">CONNECT</button>
+            <button id="disconnectSerial" class="top-serial__button feature-button" type="button" disabled>DISCONNECT</button>
+          </div>
+          <span id="systemStatus" class="visually-hidden" aria-live="polite">SYSTEM READY</span>
+        </div>
+      </header>
+
+      <main id="viewport" aria-label="Interactive 3D voxel building area"></main>
+
+      <aside class="tool-panel" aria-label="Block tools">
+        <div class="panel-intro">
+          <div class="panel-label">01 / BUILD KIT</div>
+          <div class="panel-intro__heading-row">
+            <h2>Pick a block.<br />Build a form.</h2>
+            <button id="freeMoveButton" class="free-move-button free-move-button--heading" type="button" aria-pressed="false" title="Camera-only mode. Drag to orbit without placing or erasing blocks.">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2v20M2 12h20M12 2l-3 3M12 2l3 3M22 12l-3-3M22 12l-3 3M12 22l-3-3M12 22l3-3M2 12l3-3M2 12l3 3"></path>
+              </svg>
+              <span>FREE MOVE</span>
+              <kbd>M</kbd>
+            </button>
+          </div>
+        </div>
+
+        <div class="tool-stack">
+          <button class="tool-button is-active" data-tool="standard" type="button" aria-haspopup="dialog" aria-expanded="false">
+            <span class="tool-index">01</span>
+            <span id="standardColorSwatch" class="tool-swatch swatch-standard"></span>
+            <span class="tool-copy">
+              <strong>STANDARD CUBE</strong>
+              <small>Solid block · tap again to choose a color</small>
+            </span>
+            <kbd>1</kbd>
+          </button>
+
+
+          <button class="tool-button" data-tool="support" type="button">
+            <span class="tool-index">02</span>
+            <span class="tool-swatch swatch-support"></span>
+            <span class="tool-copy">
+              <strong>SUPPORT CUBE</strong>
+              <small>Temporary helper block for stacking</small>
+            </span>
+            <kbd>2</kbd>
+          </button>
+
+          <button class="tool-button" data-tool="eraser" type="button">
+            <span class="tool-index">03</span>
+            <span class="tool-swatch swatch-eraser">×</span>
+            <span class="tool-copy">
+              <strong>ERASER</strong>
+              <small>Remove a block and drop the stack</small>
+            </span>
+            <kbd>E</kbd>
+          </button>
+        </div>
+
+
+        <div class="panel-rule"></div>
+
+        <div class="panel-actions panel-actions--files project-file-actions">
+          <button id="saveBuild" class="secondary-button secondary-button--primary" type="button">
+            SAVE PROJECT
+          </button>
+          <button id="loadBuild" class="secondary-button" type="button">LOAD PROJECT</button>
+          <button id="exportBuild" class="secondary-button project-export-button" type="button">EXPORT</button>
+          <input id="loadBuildInput" class="visually-hidden" type="file" accept=".bil,.json,.stl,.glb,.obj" />
+        </div>
+
+        <div class="panel-actions panel-actions--small">
+          <button id="resetView" class="secondary-button" type="button">RESET VIEW</button>
+          <button id="clearBuild" class="secondary-button secondary-button--danger" type="button">
+            CLEAR BUILD
+          </button>
+        </div>
+      </aside>
+
+      <div id="blockColorPopover" class="block-color-popover" role="dialog" aria-label="Choose block color" hidden>
+        <div class="block-color-popover__head">
+          <span>BLOCK COLOR</span>
+          <strong id="blockColorName">RED</strong>
+        </div>
+
+        <div class="block-color-target" role="group" aria-label="Where to apply the chosen color">
+          <span>APPLY TO</span>
+          <div class="block-color-target__buttons">
+            <button class="block-color-target__button is-active" type="button" data-color-target="new" aria-pressed="true">
+              <strong>NEW</strong><small>CUBES</small>
+            </button>
+            <button class="block-color-target__button" type="button" data-color-target="selected" aria-pressed="false">
+              <strong>SELECT</strong><small><span id="recolorSelectedCount">00</span> CUBES</small>
+            </button>
+            <button class="block-color-target__button" type="button" data-color-target="all" aria-pressed="false">
+              <strong>ALL</strong><small>MODEL</small>
+            </button>
+          </div>
+        </div>
+
+        <div class="block-color-grid" role="group" aria-label="Block colors">
+          <button class="block-color-choice block-color-choice--standard is-active" type="button" data-block-color="#e93222" data-color-name="Standard" aria-label="Standard color" title="Standard color" style="--block-color:#e93222"><span>DEFAULT</span></button>
+          <button class="block-color-choice" type="button" data-block-color="#ff7a30" data-color-name="Orange" aria-label="Orange" style="--block-color:#ff7a30"></button>
+          <button class="block-color-choice" type="button" data-block-color="#f2c94c" data-color-name="Yellow" aria-label="Yellow" style="--block-color:#f2c94c"></button>
+          <button class="block-color-choice" type="button" data-block-color="#27ae60" data-color-name="Green" aria-label="Green" style="--block-color:#27ae60"></button>
+          <button class="block-color-choice" type="button" data-block-color="#2f80ed" data-color-name="Blue" aria-label="Blue" style="--block-color:#2f80ed"></button>
+          <button class="block-color-choice" type="button" data-block-color="#9b51e0" data-color-name="Purple" aria-label="Purple" style="--block-color:#9b51e0"></button>
+          <button class="block-color-choice" type="button" data-block-color="#ff6fae" data-color-name="Pink" aria-label="Pink" style="--block-color:#ff6fae"></button>
+          <button class="block-color-choice" type="button" data-block-color="#f4f1e8" data-color-name="White" aria-label="White" style="--block-color:#f4f1e8"></button>
+          <button class="block-color-choice" type="button" data-block-color="#171717" data-color-name="Black" aria-label="Black" style="--block-color:#171717"></button>
+          <button id="customColorToggle" class="block-color-custom" type="button" aria-expanded="false" aria-controls="customColorPanel" aria-label="Custom color" title="Custom color">
+            <span class="block-color-custom__label">CUSTOM</span>
+          </button>
+        </div>
+
+        <div id="customColorPanel" class="custom-color-panel" hidden>
+          <div class="custom-color-panel__head">
+            <div>
+              <span>ANY COLOR</span>
+              <strong>MAKE YOUR OWN</strong>
+            </div>
+            <button id="customColorClose" class="custom-color-close" type="button" aria-label="Close custom color menu">×</button>
+      </div>
+
+          <div class="custom-color-preview-row">
+            <span id="customColorPreview" class="custom-color-preview" aria-hidden="true"></span>
+            <label class="custom-color-hex-wrap">
+              <span>HEX</span>
+              <input id="customColorHex" class="custom-color-hex" type="text" value="#E93222" maxlength="7" spellcheck="false" aria-label="Custom color hex value" />
+            </label>
+      </div>
+
+          <div class="custom-color-controls">
+            <label class="custom-color-control custom-color-control--hue">
+              <span>HUE</span>
+              <input id="customHue" type="range" min="0" max="360" value="5" aria-label="Hue" />
+            </label>
+            <label class="custom-color-control custom-color-control--sat">
+              <span>COLOR</span>
+              <input id="customSaturation" type="range" min="0" max="100" value="81" aria-label="Color intensity" />
+            </label>
+            <label class="custom-color-control custom-color-control--light">
+              <span>LIGHT</span>
+              <input id="customLightness" type="range" min="8" max="92" value="52" aria-label="Lightness" />
+            </label>
+      </div>
+
+          <button id="customColorApply" class="custom-color-apply" type="button">USE COLOR</button>
+        </div>
+      </div>
+
+      <aside class="stats-panel" aria-label="Simulator stats">
+        <div class="stats-panel__head">
+          <div class="panel-label">02 / LIVE DATA</div>
+          <button id="openGridSettings" class="settings-icon-button" type="button" aria-label="Open grid settings" aria-expanded="false" aria-controls="gridSettingsPopover" title="Grid settings">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 8.25A3.75 3.75 0 1 0 12 15.75 3.75 3.75 0 0 0 12 8.25Z"></path>
+              <path d="M19.15 13.48a7.8 7.8 0 0 0 .05-2.96l2.02-1.56-2-3.46-2.5 1a8.5 8.5 0 0 0-2.56-1.48L13.8 2.35H9.8l-.37 2.67A8.5 8.5 0 0 0 6.88 6.5l-2.5-1-2 3.46 2.02 1.56a7.8 7.8 0 0 0 .05 2.96l-2.07 1.6 2 3.46 2.56-1.03a8.4 8.4 0 0 0 2.49 1.43l.37 2.71h4l.37-2.71a8.4 8.4 0 0 0 2.49-1.43l2.56 1.03 2-3.46-2.07-1.6Z"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card stat-card--light">
+            <span>GRID</span>
+            <strong id="gridMetric">16×16</strong>
+          </div>
+          <div class="stat-card stat-card--dark">
+            <span>MAX HEIGHT</span>
+            <strong id="heightMetric">00/16</strong>
+          </div>
+          <div class="stat-card stat-card--accent">
+            <span>BLOCKS</span>
+            <strong id="blockMetric">000</strong>
+          </div>
+        </div>
+
+        <div id="gridSettingsPopover" class="grid-settings-popover" hidden>
+          <div class="grid-settings-popover__head">
+            <div>
+              <span class="format-purpose">GRID SETTINGS</span>
+              <strong>ACTIVE BUILD AREA</strong>
+            </div>
+            <button id="closeGridSettings" class="grid-settings-close" type="button" aria-label="Close grid settings">×</button>
+          </div>
+          <div class="grid-adjust">
+            <div class="grid-adjust__head">
+              <span>BUILD AREA SIZE</span>
+              <strong><span id="gridSizeValue">16</span> / 16</strong>
+            </div>
+            <input id="gridSizeSlider" class="twin-range is-active" type="range" min="4" max="16" step="1" value="16" aria-label="Build area size from 4 by 4 to 16 by 16" />
+            <div class="grid-adjust__scale" aria-hidden="true"><span>04×04</span><span>10×10</span><span>16×16</span></div>
+          </div>
+        </div>
+      </aside>
+
+      <aside class="feature-panel" aria-label="Build controls">
+        <div class="panel-label">04 / CONTROL DECK</div>
+
+        <div class="feature-section render-controls">
+          <div class="feature-heading">
+            <span>MODEL VIEW</span>
+            <strong id="realtimeRenderStatus">BLOCKS</strong>
+          </div>
+          <div class="render-mode-buttons" role="group" aria-label="Live model surface">
+            <button class="render-mode-button is-active" data-live-surface="voxel" type="button" aria-pressed="true">BLOCKS</button>
+            <button class="render-mode-button" data-live-surface="soft1" type="button" aria-pressed="false">SMOOTH</button>
+          </div>
+          <div id="realtimeSmoothingControls" class="realtime-smoothing" hidden>
+            <div class="realtime-smoothing__head">
+              <span>SMOOTHNESS</span>
+              <strong><span id="realtimeSmoothingValue">03</span> / 05</strong>
+            </div>
+            <input id="realtimeSmoothingSlider" class="twin-range is-active" type="range" min="1" max="5" step="1" value="3" aria-label="Smoothness level from one to five" />
+            <div class="realtime-smoothing__meta">
+              <span id="realtimeSmoothingState">READY</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-section continuous-controls">
+          <div class="feature-heading">
+            <span>CONTINUOUS BUILD</span>
+            <button id="continuousToggle" class="autosave-toggle" type="button" role="switch" aria-checked="false" aria-label="Toggle continuous build mode">
+              <span class="autosave-toggle__track" aria-hidden="true"><i></i></span>
+              <span id="continuousStatus" class="autosave-state">OFF</span>
+            </button>
+          </div>
+          <small class="continuous-hint">ALT + LEFT DRAG → ORBIT CAMERA</small>
+        </div>
+
+        <div class="feature-section autosave-controls">
+          <div class="feature-heading">
+            <span>AUTOSAVE</span>
+            <button id="autosaveToggle" class="autosave-toggle is-on" type="button" role="switch" aria-checked="true" aria-label="Toggle autosave">
+              <span class="autosave-toggle__track" aria-hidden="true"><i></i></span>
+              <span id="autosaveStatus" class="autosave-state">ON</span>
+            </button>
+          </div>
+          <div class="autosave-row">
+            <span id="autosaveMeta" class="autosave-meta">Waiting for changes</span>
+            <button id="openRecentModels" class="feature-button" type="button">RECENT MODELS</button>
+          </div>
+        </div>
+
+        <div class="feature-section layer-controls">
+          <div class="feature-heading">
+            <span>LAYER VIEW</span>
+            <strong id="layerValue">ALL</strong>
+          </div>
+          <div class="layer-row">
+            <button id="showAllLayers" class="layer-all is-active" type="button">ALL</button>
+            <input id="layerSlider" class="twin-range" type="range" min="0" max="16" step="1" value="0" aria-label="Show build up to selected layer; zero shows all layers" />
+          </div>
+          <div class="layer-scale" aria-hidden="true"><span>01</span><span>08</span><span>16</span></div>
+        </div>
+
+      </aside>
+
+      <section class="feedback-card" aria-live="polite">
+        <span class="feedback-number">03 / FEEDBACK</span>
+        <strong id="feedbackTitle">PLACE ON BASE</strong>
+        <p id="feedbackText">Hover a cell or block face to preview a physically valid placement.</p>
+      </section>
+
+      <section id="saveModal" class="save-modal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle" hidden>
+        <button id="saveModalBackdrop" class="save-modal__backdrop" type="button" aria-label="Close export panel"></button>
+
+        <div class="save-modal__panel">
+          <div class="save-modal__header">
+            <div>
+              <div class="panel-label">06 / EXPORT</div>
+              <h2 id="saveModalTitle">EXPORT FOR <span>PRINT / 3D</span></h2>
+            </div>
+            <button id="closeSaveModal" class="modal-close" type="button" aria-label="Close export panel">×</button>
+          </div>
+
+          <div class="save-modal__scroll">
+          <p class="save-modal__intro">
+            Export a static mesh from the same surface you are previewing in the editor. Project saving is handled separately with the native Build It Live project file.
+          </p>
+
+          <div class="export-model-view" aria-label="Current model view used for export">
+            <span class="format-purpose">MODEL VIEW</span>
+            <strong id="exportModelViewValue">BLOCKS</strong>
+          </div>
+
+          <div class="format-grid">
+            <button class="format-card format-card--light" data-export-format="stl" type="button">
+              <span class="format-index">01</span>
+              <strong>.STL</strong>
+              <span class="format-purpose">3D PRINT</span>
+              <p>Geometry-only print export with Standard Cubes only, positioned to match the web grid. Use 3MF when model colors must reach Bambu.</p>
+              <span class="format-action">EXPORT STL →</span>
+            </button>
+
+            <button class="format-card format-card--dark" data-export-format="glb" type="button">
+              <span class="format-index">02</span>
+              <strong>.GLB</strong>
+              <span class="format-purpose">3D SCENE</span>
+              <p>Compact scene file with colors, scale, and reusable geometry for viewers and 3D tools.</p>
+              <span class="format-action">EXPORT GLB →</span>
+            </button>
+
+            <button class="format-card format-card--yellow" data-export-format="obj" type="button">
+              <span class="format-index">03</span>
+              <strong>.OBJ</strong>
+              <span class="format-purpose">3D SOFTWARE</span>
+              <p>Geometry export for CAD and modelling workflows, aligned to the same voxel coordinate system.</p>
+              <span class="format-action">EXPORT OBJ →</span>
+            </button>
+
+            <button class="format-card format-card--bambu" data-export-format="3mf" type="button">
+              <span class="format-index">04</span>
+              <strong>.3MF</strong>
+              <span class="format-purpose">BAMBU / MULTICOLOR</span>
+              <p>Print package that keeps Standard Cube colors, including the current Smooth surface when Smooth is active.</p>
+              <span class="format-action">EXPORT 3MF →</span>
+            </button>
+          </div>
+
+          <div class="save-modal__note">
+            <strong>EXPORT = STATIC GEOMETRY</strong>
+            <span>Use SAVE PROJECT for an editable .BIL file. Use 3MF for multicolor Bambu printing; STL remains geometry-only.</span>
+          </div>
+          </div>
+        </div>
+      </section>
+
+
+      <section id="loadModal" class="load-modal" role="dialog" aria-modal="true" aria-labelledby="loadModalTitle" hidden>
+        <button id="loadModalBackdrop" class="load-modal__backdrop" type="button" aria-label="Close load panel"></button>
+
+        <div class="load-modal__panel">
+          <div class="load-modal__header">
+            <div>
+              <div class="panel-label">05 / OPEN PROJECT</div>
+              <h2 id="loadModalTitle">LOAD YOUR <span>PROJECT</span></h2>
+            </div>
+            <button id="closeLoadModal" class="modal-close" type="button" aria-label="Close load panel">×</button>
+          </div>
+
+          <div class="load-modal__body">
+            <div class="load-modal__copy">
+              <p>Open a native Build It Live project to continue editing. Legacy formats remain available only for backwards compatibility and recovery.</p>
+              <div id="loadDropZone" class="load-dropzone" tabindex="0" role="button" aria-label="Drop a saved model file here or choose a format below">
+                <span class="load-dropzone__index">DROP</span>
+                <strong>DROP FILE HERE</strong>
+                <span>.BIL / LEGACY JSON / GLB / OBJ / STL</span>
+              </div>
+            </div>
+
+            <div class="load-format-grid">
+              <button class="load-format-card load-format-card--project" data-load-format="bil" type="button">
+                <span class="format-index">01</span>
+                <strong>.BIL</strong>
+                <span class="format-purpose">NATIVE EDITABLE PROJECT</span>
+                <p>Grid, Standard/Support blocks, render mode, Smoothness, camera, and project metadata in one portable file.</p>
+                <span class="format-action">OPEN PROJECT →</span>
+              </button>
+
+              <button class="load-format-card load-format-card--accent" data-load-format="json" type="button">
+                <span class="format-index">02</span>
+                <strong>.JSON</strong>
+                <span class="format-purpose">LEGACY EDITABLE STATE</span>
+                <p>Exact coordinates, block types and simulator state.</p>
+                <span class="format-action">OPEN LEGACY JSON →</span>
+              </button>
+
+              <button class="load-format-card load-format-card--dark" data-load-format="glb" type="button">
+                <span class="format-index">03</span>
+                <strong>.GLB</strong>
+                <span class="format-purpose">LEGACY GLB RECOVERY</span>
+                <p>Restores older Build It Live GLB files only when they contain historical editable block metadata.</p>
+                <span class="format-action">CHOOSE LEGACY GLB →</span>
+              </button>
+
+              <button class="load-format-card load-format-card--yellow" data-load-format="obj" type="button">
+                <span class="format-index">04</span>
+                <strong>.OBJ</strong>
+                <span class="format-purpose">LEGACY OBJ RECOVERY</span>
+                <p>Restores older Build It Live OBJ files when their historical block metadata is still present.</p>
+                <span class="format-action">CHOOSE LEGACY OBJ →</span>
+              </button>
+
+              <button class="load-format-card load-format-card--light" data-load-format="stl" type="button">
+                <span class="format-index">05</span>
+                <strong>.STL</strong>
+                <span class="format-purpose">LEGACY STL RECOVERY</span>
+                <p>Attempts exact Build It Live state recovery from older STL exports without treating STL as the native project format.</p>
+                <span class="format-action">CHOOSE STL →</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="load-modal__note">
+            <strong>NATIVE WORKFLOW → SAVE / LOAD .BIL</strong>
+            <span>Mesh files are exports, not projects. Legacy JSON / GLB / OBJ / STL loading remains available so older work is not stranded.</span>
+          </div>
+        </div>
+      </section>
+
+
+      <section id="recentModal" class="recent-modal" role="dialog" aria-modal="true" aria-labelledby="recentModalTitle" hidden>
+        <button id="recentModalBackdrop" class="recent-modal__backdrop" type="button" aria-label="Close recent models panel"></button>
+
+        <div class="recent-modal__panel">
+          <div class="recent-modal__header">
+            <div>
+              <div class="panel-label">07 / BROWSER STORAGE</div>
+              <h2 id="recentModalTitle">RECENT <span>MODELS</span></h2>
+            </div>
+            <button id="closeRecentModal" class="modal-close" type="button" aria-label="Close recent models panel">×</button>
+          </div>
+
+          <div class="recent-modal__intro-row">
+            <p>Autosaved locally in this browser. Open a previous state without choosing a file.</p>
+            <button id="clearRecentModels" class="recent-clear" type="button">CLEAR RECENTS</button>
+          </div>
+
+          <div id="recentModelsList" class="recent-list" aria-live="polite"></div>
+
+          <div class="recent-modal__note">
+            <strong>AUTOSAVE → TOGGLEABLE / LOCAL BROWSER ONLY</strong>
+            <span>When Autosave is ON, refreshing restores the latest local model automatically. Save a native .BIL project for a portable editable backup.</span>
+          </div>
+        </div>
+      </section>
+
+      <footer class="helpbar">
+        <span><b>DRAG</b> orbit</span>
+        <span><b>RIGHT DRAG</b> pan</span>
+        <span><b>SCROLL</b> zoom</span>
+        <span><b>CLICK</b> place / erase</span>
+      </footer>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
